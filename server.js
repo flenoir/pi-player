@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-var WebSocketServer = require('websocket').server;
-var http = require('http');
+
+var http = require('http').createServer(handler);
 var fifojs = require('fifojs');
+var io = require('socket.io').listen(http, {log: false});
 var fs = require('fs');
 
 // Setup the pipe
 var pipe = '/tmp/omx';
+var mediaPath = 'media';
 
 fs.exists(pipe, function (exists) {
 	if (exists)
@@ -17,72 +19,27 @@ fs.exists(pipe, function (exists) {
 	}
 });
 
-// Generate File Listing
-var files = fs.readdirSync('media/');
+http.listen(8080);
 
+function handler (req, res) {
+  fs.readFile(__dirname + '/index.html',
+  function (err, data) {
+    if (err) {
+      res.writeHead(500);
+      return res.end('Error loading index.html');
+    }
 
-var server = http.createServer(function(request, response) {
-    console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
-    response.end();
-});
-
-server.listen(8080, function() {
-    console.log((new Date()) + ' Server is listening on port 8080');
-});
-
-wsServer = new WebSocketServer({
-    httpServer: server,
-    // You should not use autoAcceptConnections for production
-    // applications, as it defeats all standard cross-origin protection
-    // facilities built into the protocol and the browser.  You should
-    // *always* verify the connection's origin and decide whether or not
-    // to accept it.
-    autoAcceptConnections: false
-});
-
-function originIsAllowed(origin) {
-  // put logic here to detect whether the specified origin is allowed.
-  return true;
+    res.writeHead(200);
+    res.end(data);
+  });
 }
 
-wsServer.on('request', function(request) {
-    if (!originIsAllowed(request.origin)) {
-      // Make sure we only accept requests from an allowed origin
-      request.reject();
-      console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-      return;
-    }
+var files = fs.readdirSync(mediaPath).sort()
 
-    var connection = request.accept('echo-protocol', request.origin);
-    console.log((new Date()) + ' Connection accepted.');
-
-    function sendFiles() {
-	if (connection.connected) {
-	  connection.sendUTF('hello world');
-	}
-    }
-    sendFiles();
-
-    connection.on('message', function(message) {
-        if (message.type === 'utf8') {
-            console.log('Received Message: ' + message.utf8Data);
-            // Send command to pipe
-            fs.appendFile(pipe, message.utf8Data, function (err) {
-			if (err) {
-				return console.log(err);
-			}
-			console.log("Wrote message to pipe");
-			});
-            connection.sendUTF(message.utf8Data);
-        }
-        else if (message.type === 'binary') {
-            console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-            connection.sendBytes(message.binaryData);
-        }
-    });
-
-    connection.on('close', function(reasonCode, description) {
-        console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
+io.sockets.on('connection', function (socket) {
+  socket.emit('files', files);
+  socket.on('command', function (data) {
+    console.log(data);
+    socket.emit('log', data)
+  });
 });
