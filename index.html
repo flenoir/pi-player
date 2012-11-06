@@ -76,6 +76,11 @@
           messages.scrollTop = messages.scrollHeight;
         });
 
+	// Display the media files received from the server
+        socket.addEventListener("files", function(event) {
+          console.log("Server Says: " + event.data + "\n");
+        });
+
         // Display any errors that occur
         socket.addEventListener("error", function(event) {
           messages.value += "Error: " + event + "\n";
@@ -101,7 +106,7 @@
         socket.send('p');
       });
 
-	  back.addEventListener("click", function(event) {
+      back.addEventListener("click", function(event) {
         socket.send('\x1B\x5B\x44');
       });
 
@@ -110,11 +115,11 @@
       });
 
       slow.addEventListener("click", function(event) {
-        socket.send('2');
+        socket.send('1');
       });
 
       fast.addEventListener("click", function(event) {
-        socket.send('1');
+        socket.send('2');
       });
 
       abort.addEventListener("click", function(event) {
@@ -137,6 +142,7 @@
 		<div class="three columns sidebar">
 			<nav>
 				<h3 id="logo">Playlist</h3>
+				<input id="get" type="button" value="Get Files" />
 				<select multiple="multiple" size="25" name="items">
 					<option value="item1">Item 1</option>
 					<option value="item2">Item 2</option>
