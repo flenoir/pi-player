@@ -4,6 +4,8 @@ var http = require('http').createServer(handler);
 var fifojs = require('fifojs');
 var io = require('socket.io').listen(http, {log: false});
 var fs = require('fs');
+var moment = require('moment');
+var exec = require('child_process').exec;
 
 // Setup the pipe
 var pipe = '/tmp/omx';
@@ -22,24 +24,42 @@ fs.exists(pipe, function (exists) {
 http.listen(8080);
 
 function handler (req, res) {
-  fs.readFile(__dirname + '/index.html',
-  function (err, data) {
-    if (err) {
-      res.writeHead(500);
-      return res.end('Error loading index.html');
-    }
-
-    res.writeHead(200);
-    res.end(data);
-  });
+	fs.readFile(__dirname + '/index.html',
+	function (err, data) {
+		if (err) {
+			res.writeHead(500);
+			return res.end('Error loading index.html');
+		}
+		res.writeHead(200);
+		res.end(data);
+	});
 }
 
 var files = fs.readdirSync(mediaPath).sort()
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('files', files);
-  socket.on('command', function (data) {
-    console.log(data);
-    socket.emit('log', data)
-  });
+	socket.emit('files', files);
+	socket.on('command', function (data) {
+		fs.appendFile(pipe, data, function (err) {
+			if (err) {
+				return console.log(err);
+			}
+			console.log("Wrote message to pipe");
+			});
+		socket.emit('log', data)
+	});
+	socket.on('play', function (data) {
+		for (i=0; i < data.length; i++) {
+			var date = moment().format('M/D/YYYY, h:mm:ss a');
+			var message = date + ', Played file: ' + data[i];
+			exec('omxplayer -o hdmi "'+ data[i] +'" < /tmp/omx',
+			function (error, stdout, stderr) {
+				if (error !== null) {
+					socket.emit('log', 'exec error: ' + error);
+				} else {
+					socket.emit('log', message);
+				}
+			});
+		}
+	})
 });

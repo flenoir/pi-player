@@ -3,113 +3,110 @@
 <!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
 <!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
 <!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
-  <head>
-    <!-- Basic Page Needs -->
-    <meta charset="utf-8">
-    <title>Pi Player</title>
-    <meta name="description" content="">
-    <meta name="author" content="Andrew Niemantsverdriet">
+	<head>
+		<!-- Basic Page Needs -->
+		<meta charset="utf-8">
+		<title>Pi Player</title>
+		<meta name="description" content="">
+		<meta name="author" content="Andrew Niemantsverdriet">
 
-    <!-- Mobile Specific Metas -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<!-- Mobile Specific Metas -->
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="./stylesheets/base.css">
-    <link rel="stylesheet" href="./stylesheets/skeleton.css">
-    <link rel="stylesheet" href="./stylesheets/layout.css">
+		<!-- CSS -->
+		<link rel="stylesheet" href="./stylesheets/base.css">
+		<link rel="stylesheet" href="./stylesheets/skeleton.css">
+		<link rel="stylesheet" href="./stylesheets/layout.css">
 
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+		<!--[if lt IE 9]>
+			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
 
-    <!-- Favicons -->
-    <link rel="shortcut icon" href="./images/favicon.ico">
-    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="./images/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="./images/apple-touch-icon-114x114.png">
-  </head>
-  <body>
-    <!-- Primary Page Layout-->
-    <div class="container">
-      <div class="three columns sidebar">
+		<!-- Favicons -->
+		<link rel="shortcut icon" href="./images/favicon.ico">
+		<link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="./images/apple-touch-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="./images/apple-touch-icon-114x114.png">
+	</head>
+	<body>
+		<!-- Primary Page Layout-->
+		<div class="container">
+			<div class="three columns sidebar">
+				<h3 id="logo">Playlist</h3>
+				<input id="go" type="button" value="Play Selected Items" />
+				<select multiple="multiple" size="14" id="items">
+				</select>
+				<input id="clear" type="button" value="Clear Selected Items" />
+			</div>
+			<div class="thirteen columns">
+				<h1 class="remove-bottom" style="margin-top: 40px">Pi Player</h1>
+				<h5 id="status">Status: Not Connected</h5>
+				<hr />
+			</div>
+			<div class="five columns clearfix">
+				<h3>Controls</h3>
+				<input id="p" class="four columns" type="button" value="Play/Pause" />
 
-          <h3 id="logo">Playlist</h3>
-          <select multiple="multiple" size="25" id="items">
-          </select>
-          <input id="go" type="button" value="Play Selected Items" />
+				<input id="back" class="two columns" type="button" value="Replay" />
+				<input id="skip" class="two columns" type="button" value="Skip" />
 
-        &nbsp;
-      </div>
-      <div class="thirteen columns">
-        <h1 class="remove-bottom" style="margin-top: 40px">Pi Player</h1>
-        <h5>Status: <span id="status">Not Connected</span></h5>
-        <hr />
-      </div>
-      <div class="five columns clearfix">
-        <h3>Controls</h3>
-        <input id="p" class="four columns" type="button" value="Play/Pause" />
+				<input id="slow" class="two columns" type="button" value="Slow" />
+				<input id="fast" class="two columns" type="button" value="Fast" />
 
-        <input id="back" class="two columns" type="button" value="Replay" />
-        <input id="skip" class="two columns" type="button" value="Skip" />
+				<input id="abort" class="four columns" type="button" value="Abort" />
+			</div>
+			<div class="eight columns">
+				<h3>Log</h3>
+				<textarea class="seven columns" id="messages" rows="9"></textarea>
+			</div>
 
-        <input id="slow" class="two columns" type="button" value="Slow" />
-        <input id="fast" class="two columns" type="button" value="Fast" />
-
-        <input id="abort" class="four columns" type="button" value="Abort" />
-      </div>
-      <div class="eight columns">
-        <h3>Log</h3>
-        <textarea class="seven columns" id="messages" rows="10"></textarea>
-      </div>
-
-    </div><!-- container -->
+		</div><!-- container -->
 
 
-    <!-- The javascript files -->
-    <script src="./js/jquery-1.8.2.min.js"></script>
-    <script src="./js/socket.io.js"></script>
-    <!-- Web Sockets -->
-    <script>
-      var socket = io.connect('http://localhost:8080');
-      socket.on('files', function (data) {
-        $("#status").html('Connected!');
-        for (i=0; i < data.length; i++) {
-          $("#items").append('<option value="'+data[i]+'">' + data[i] + '</option>')
-        }
-      });
+		<!-- The javascript files -->
+		<script src="./js/jquery-1.8.2.min.js"></script>
+		<script src="./js/socket.io.js"></script>
+		<!-- Web Sockets -->
+		<script>
+			var socket = io.connect('http://localhost:8080');
+			socket.on('files', function (data) {
+				$("#status").html('Status: Connected');
+				for (i=0; i < data.length; i++) {
+					$("#items").append('<option value="'+data[i]+'">' + data[i] + '</option>');
+				}
+			});
 
-      socket.on('log', function(message) {
-        $("#messages").val($('#messages').val()+message+'\n');
-        messages.scrollTop = messages.scrollHeight;
-      });
+			socket.on('log', function(message) {
+				$("#messages").val($('#messages').val()+message+'\n');
+				messages.scrollTop = messages.scrollHeight;
+			});
 
-      // Send events to websocket
-      function sendData(data) {
-        socket.emit('command', data);
-      }
-      // Button Click Handlers
-      $("#go").click(function() {
-        sendData("go button pushed!");
-      });
-      $("#p").click(function() {
-        sendData("play/pause button pushed!");
-      });
-      $("#back").click(function() {
-        sendData("replay button pushed!");
-      });
-      $("#skip").click(function() {
-        sendData("skip button pushed!");
-      });
-      $("#slow").click(function() {
-        sendData("slow button pushed!");
-      });
-      $("#fast").click(function() {
-        sendData("fast button pushed!");
-      });
-      $("#abort").click(function() {
-        sendData("abort button pushed!");
-      });
-    </script>
-  <!-- End Document -->
-  </body>
+			// Button Click Handlers
+			$("#go").click(function() {
+				socket.emit('play', $("#items").val());
+			});
+			$("#clear").click(function() {
+				$("#items").val([]);
+			});
+			$("#p").click(function() {
+				socket.emit('command', 'p');
+			});
+			$("#back").click(function() {
+				socket.emit('command', '\x1B\x5B\x44');
+			});
+			$("#skip").click(function() {
+				socket.emit('command', '\x1B\x5B\x43');
+			});
+			$("#slow").click(function() {
+				socket.emit('command', '1');
+			});
+			$("#fast").click(function() {
+				socket.emit('command', '2');
+			});
+			$("#abort").click(function() {
+				socket.emit('command', 'q');
+			});
+		</script>
+	<!-- End Document -->
+	</body>
 </html>
