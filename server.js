@@ -5,11 +5,11 @@ var fifojs = require('fifojs');
 var io = require('socket.io').listen(http, {log: false});
 var fs = require('fs');
 var moment = require('moment');
-var exec = require('child_process').exec;
+var exec = require('exec-sync');
 
 // Setup the pipe
 var pipe = '/tmp/omx';
-var mediaPath = 'media';
+var mediaPath = './media/';
 
 fs.exists(pipe, function (exists) {
 	if (exists)
@@ -44,22 +44,16 @@ io.sockets.on('connection', function (socket) {
 			if (err) {
 				return console.log(err);
 			}
-			console.log("Wrote message to pipe");
+			console.log('Wrote ' + data + ' to pipe');
 			});
-		socket.emit('log', data)
+		socket.emit('log', data); //DEBUG
 	});
 	socket.on('play', function (data) {
 		for (i=0; i < data.length; i++) {
 			var date = moment().format('M/D/YYYY, h:mm:ss a');
 			var message = date + ', Played file: ' + data[i];
-			exec('omxplayer -o hdmi "'+ data[i] +'" < /tmp/omx',
-			function (error, stdout, stderr) {
-				if (error !== null) {
-					socket.emit('log', 'exec error: ' + error);
-				} else {
-					socket.emit('log', message);
-				}
-			});
+			exec('./play.sh "'+ mediaPath + data[i] +'"');
+			socket.emit('log', message);
 		}
 	})
 });
