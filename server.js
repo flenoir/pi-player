@@ -5,7 +5,7 @@ var fifojs = require('fifojs');
 var io = require('socket.io').listen(http, {log: false});
 var fs = require('fs');
 var moment = require('moment');
-var exec = require('exec-sync');
+var exec = require("child_process").exec;
 
 // Setup the pipe
 var pipe = '/tmp/omx';
@@ -48,12 +48,18 @@ io.sockets.on('connection', function (socket) {
 			});
 		socket.emit('log', data); //DEBUG
 	});
-	socket.on('play', function (data) {
-		for (i=0; i < data.length; i++) {
+	socket.on('play', function playFile(data) {
+		var file = data.shift();
+		if (file == undefined) {
+				console.log("Finished Playlist");
+		} else {
 			var date = moment().format('M/D/YYYY, h:mm:ss a');
-			var message = date + ', Played file: ' + data[i];
-			exec('./play.sh "'+ mediaPath + data[i] +'"');
-			socket.emit('log', message);
+			var message = date + ', Played file: ' + file;
+			exec('./play.sh "'+ mediaPath + file +'"', function (err) {
+				socket.emit('log', message);
+				playFile(data);
+			});
 		}
 	})
 });
+
