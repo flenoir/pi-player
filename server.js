@@ -35,10 +35,17 @@ function handler (req, res) {
 	});
 }
 
-var files = fs.readdirSync(mediaPath).sort()
+function listFiles(){
+	var files = fs.readdirSync(mediaPath).sort()
+	return files
+}
 
 io.sockets.on('connection', function (socket) {
-	socket.emit('files', files);
+	socket.emit('files', listFiles());
+	fs.watch(mediaPath, function (event, filename) {
+		console.log("File Sytem Event: " + event);
+		socket.emit('files', listFiles());
+	});
 	socket.on('command', function (data) {
 		fs.appendFile(pipe, data, function (err) {
 			if (err) {
