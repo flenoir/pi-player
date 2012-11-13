@@ -1,4 +1,4 @@
 #!/bin/bash
-echo "I am here"
+echo "Begin Playing"
 sleep 10
-echo "now here"
+echo "End Playing"

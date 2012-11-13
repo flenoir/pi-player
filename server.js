@@ -11,6 +11,10 @@ var exec = require("child_process").exec;
 var pipe = '/tmp/omx';
 var mediaPath = './media/';
 
+// Global Variables
+playQueue = [];
+isPlaying = false;
+
 fs.exists(pipe, function (exists) {
 	if (exists)
 	{
@@ -55,17 +59,28 @@ io.sockets.on('connection', function (socket) {
 			});
 		socket.emit('log', data); //DEBUG
 	});
-	socket.on('play', function playFile(data) {
-		var file = data.shift();
-		if (file == undefined) {
+	socket.on('play', function (data) {
+		playQueue = playQueue.concat(data);
+		console.log('Adding files to playlist')
+		if (!isPlaying) {
+			isPlaying = true;
+			playFile(playQueue);
+		}
+		function playFile(playQueue) {
+			console.log('Playlist: ' + playQueue);
+			var file = playQueue.shift();
+			console.log('Playing file: ' + file);
+			if (file == undefined) {
+				isPlaying = false;
 				console.log("Finished Playlist");
-		} else {
-			var date = moment().format('M/D/YYYY, h:mm:ss a');
-			var message = date + ', Played file: ' + file;
-			exec('./play.sh "'+ mediaPath + file +'"', function (err) {
-				socket.emit('log', message);
-				playFile(data);
-			});
+			} else {
+				var date = moment().format('M/D/YYYY, h:mm:ss a');
+				var message = date + ', Played file: ' + file;
+				exec('./play.test "'+ mediaPath + file +'"', function (err) {
+					socket.emit('log', message);
+					playFile(playQueue);
+				});
+			}
 		}
 	})
 });
