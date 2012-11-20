@@ -55,6 +55,23 @@ function writePipe(command) {
 		return true;
 	});
 }
+function playFile(playQueue, callback) {
+	console.log('Playlist: ' + playQueue);
+	var file = playQueue.shift();
+	console.log('Playing file: ' + file);
+	if (file === undefined) {
+		isPlaying = false;
+		console.log("Finished Playlist");
+	} else {
+		var date = moment().format('M/D/YYYY, h:mm:ss a');
+		var message = date + ', Played file: ' + file;
+		exec('./play.sh "'+ mediaPath + file +'"', function (err) {
+			callback(message);
+			playFile(playQueue, log);
+		});
+		writePipe('.'); // This is to ensure the pipe is ready
+	}
+}
 
 io.sockets.on('connection', function (socket) {
 	socket.emit('files', listFiles());
@@ -68,24 +85,10 @@ io.sockets.on('connection', function (socket) {
 		console.log('Adding files to playlist')
 		if (!isPlaying) {
 			isPlaying = true;
-			playFile(playQueue);
+			playFile(playQueue, log);
 		}
-		function playFile(playQueue) {
-			console.log('Playlist: ' + playQueue);
-			var file = playQueue.shift();
-			console.log('Playing file: ' + file);
-			if (file == undefined) {
-				isPlaying = false;
-				console.log("Finished Playlist");
-			} else {
-				var date = moment().format('M/D/YYYY, h:mm:ss a');
-				var message = date + ', Played file: ' + file;
-				exec('./play.sh "'+ mediaPath + file +'"', function (err) {
-					socket.emit('log', message);
-					playFile(playQueue);
-				});
-				writePipe('.'); // This is to ensure the pipe is ready
-			}
+		function log(message) {
+			socket.emit('log', message);
 		}
 	})
 });
