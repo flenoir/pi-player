@@ -68,7 +68,7 @@
 		<script src="./js/socket.io.js"></script>
 		<!-- Web Sockets -->
 		<script>
-			var socket = io.connect('http://localhost:8080');
+			var socket = io.connect('http://10.10.27.7:8080');
 			socket.on('files', function (data) {
 				$("#status").html('Status: Connected');
 				$("#items").html('');
