@@ -62,9 +62,7 @@ io.sockets.on('connection', function (socket) {
 		console.log("File Sytem Event: " + event);
 		socket.emit('files', listFiles());
 	});
-	socket.on('command', function (data) {
-		writePipe(data);
-	});
+	socket.on('command', writePipe);
 	socket.on('play', function (data) {
 		playQueue = playQueue.concat(data);
 		console.log('Adding files to playlist')
