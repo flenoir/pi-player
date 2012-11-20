@@ -1,2 +1,2 @@
 #!/bin/bash
-omxplayer "$1" < /tmp/omx && echo -n . > /tmp/omx
+omxplayer -o hdmi "$1" < /tmp/omx
