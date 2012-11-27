@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-var http = require('http').createServer(handler);
+var express = require('express')();
+var server = require('http').createServer(express);
+var io = require('socket.io').listen(server, {log: false});
 var fifojs = require('fifojs');
-var io = require('socket.io').listen(http, {log: false});
 var fs = require('fs');
 var moment = require('moment');
 var exec = require("child_process").exec;
-var qs = require('querystring');
 
 // Setup the pipe
 var pipe = '/tmp/omx';
-var mediaPath = './media/';
+var mediaPath = '/root/pi-player/media/';
 
 // Global Variables
 playQueue = [];
@@ -26,20 +26,11 @@ fs.exists(pipe, function (exists) {
 	}
 });
 
-http.listen(8080);
+server.listen(8080);
 
-function handler (req, res) {
-	if (request.method == 'POST') {
-		var body = '';
-		request.on('data', function (data) {
-			body += data;
-		});
-		request.on('end', function () {
-			var data = qs.parse(body);
-			console.log('I got: ' + data);
-		});
-	}
-}
+express.get('/', function (req, res) {
+  res.sendfile(__dirname + '/index.html');
+});
 
 function listFiles(){
 	var files = fs.readdirSync(mediaPath).sort();
@@ -65,9 +56,9 @@ function playFile(playQueue, callback) {
 	} else {
 		var date = moment().format('M/D/YYYY, h:mm:ss a');
 		var message = date + ', Played file: ' + file;
-		exec('./play.sh "'+ mediaPath + file +'"', function (err) {
+		exec('/root/pi-player/play.sh "'+ mediaPath + file +'"', function (err) {
 			callback(message);
-			playFile(playQueue, log);
+			playFile(playQueue, callback);
 		});
 		writePipe('.'); // This is to ensure the pipe is ready
 	}
@@ -82,7 +73,8 @@ io.sockets.on('connection', function (socket) {
 	socket.on('command', writePipe);
 	socket.on('play', function (data) {
 		playQueue = playQueue.concat(data);
-		console.log('Adding files to playlist')
+		console.log('Adding ' + data + ' to playlist');
+		console.log('Playlist is: ' + playQueue);
 		if (!isPlaying) {
 			isPlaying = true;
 			playFile(playQueue, log);

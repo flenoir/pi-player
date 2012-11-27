@@ -86,14 +86,16 @@
 				$("#status").html('Status: Not Connected');
 				$("#items").html('');
 			});
-
-			// Button Click Handlers
+			
+			// Playlist buttons
 			$("#go").click(function() {
 				socket.emit('play', $("#items").val());
 			});
 			$("#clear").click(function() {
 				$("#items").val([]);
 			});
+
+			// Control Buttons
 			$("#p").click(function() {
 				socket.emit('command', 'p');
 			});
