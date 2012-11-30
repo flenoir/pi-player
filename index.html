@@ -68,7 +68,11 @@
 		<script src="./js/socket.io.js"></script>
 		<!-- Web Sockets -->
 		<script>
-			var socket = io.connect('http://10.10.27.7:8080');
+			$.get("http://bismuth.rocky.edu/pi-player/ip.txt").done(function(data){
+				console.log(data);
+			});
+
+			var socket = io.connect('10.10.27.7:8080');
 			socket.on('files', function (data) {
 				$("#status").html('Status: Connected');
 				$("#items").html('');
