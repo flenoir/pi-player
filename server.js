@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
-var express = require('express')();
-var server = require('http').createServer(express);
-var io = require('socket.io').listen(server, {log: false});
+var http = require('http').createServer(handler);
+var io = require('socket.io').listen(http, {log: false});
 var fifojs = require('fifojs');
 var fs = require('fs');
 var moment = require('moment');
@@ -26,11 +25,19 @@ fs.exists(pipe, function (exists) {
 	}
 });
 
-server.listen(8080);
+http.listen(8080);
 
-express.get('/', function (req, res) {
-  res.sendfile(__dirname + '/index.html');
-});
+function handler (req, res) {
+	fs.readFile(__dirname + '/index.html',
+	function (err, data) {
+		if (err) {
+			res.writeHead(500);
+			return res.end('Error loading index.html');
+		}
+		res.writeHead(200);
+		res.end(data);
+	});
+}
 
 function listFiles(){
 	var files = fs.readdirSync(mediaPath).sort();
@@ -46,7 +53,7 @@ function writePipe(command) {
 		return true;
 	});
 }
-function playFile(playQueue, callback) {
+function playFile(callback) {
 	console.log('Playlist: ' + playQueue);
 	var file = playQueue.shift();
 	console.log('Playing file: ' + file);
@@ -58,7 +65,7 @@ function playFile(playQueue, callback) {
 		var message = date + ', Played file: ' + file;
 		exec('/root/pi-player/play.sh "'+ mediaPath + file +'"', function (err) {
 			callback(message);
-			playFile(playQueue, callback);
+			playFile(callback);
 		});
 		writePipe('.'); // This is to ensure the pipe is ready
 	}
@@ -77,7 +84,7 @@ io.sockets.on('connection', function (socket) {
 		console.log('Playlist is: ' + playQueue);
 		if (!isPlaying) {
 			isPlaying = true;
-			playFile(playQueue, log);
+			playFile(log);
 		}
 		function log(message) {
 			socket.emit('log', message);
