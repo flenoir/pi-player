@@ -68,55 +68,53 @@
 		<script src="./js/socket.io.js"></script>
 		<!-- Web Sockets -->
 		<script>
-			$.get("http://bismuth.rocky.edu/pi-player/ip.txt").done(function(data){
-				console.log(data);
-			});
+			$.get("http://bismuth.rocky.edu/pi-player/ip.txt").done(function(host){
+				var socket = io.connect(host);
+				socket.on('files', function (data) {
+					$("#status").html('Status: Connected');
+					$("#items").html('');
+					for (i=0; i < data.length; i++) {
+						$("#items").append('<option value="'+data[i]+'">' + data[i] + '</option>');
+					}
+				});
 
-			var socket = io.connect('10.10.27.7:8080');
-			socket.on('files', function (data) {
-				$("#status").html('Status: Connected');
-				$("#items").html('');
-				for (i=0; i < data.length; i++) {
-					$("#items").append('<option value="'+data[i]+'">' + data[i] + '</option>');
-				}
-			});
+				socket.on('log', function(message) {
+					$("#messages").val($('#messages').val()+message+'\n');
+					messages.scrollTop = messages.scrollHeight;
+				});
 
-			socket.on('log', function(message) {
-				$("#messages").val($('#messages').val()+message+'\n');
-				messages.scrollTop = messages.scrollHeight;
-			});
+				socket.on('disconnect', function () {
+					$("#status").html('Status: Not Connected');
+					$("#items").html('');
+				});
 
-			socket.on('disconnect', function () {
-				$("#status").html('Status: Not Connected');
-				$("#items").html('');
-			});
-			
-			// Playlist buttons
-			$("#go").click(function() {
-				socket.emit('play', $("#items").val());
-			});
-			$("#clear").click(function() {
-				$("#items").val([]);
-			});
+				// Playlist buttons
+				$("#go").click(function() {
+					socket.emit('play', $("#items").val());
+				});
+				$("#clear").click(function() {
+					$("#items").val([]);
+				});
 
-			// Control Buttons
-			$("#p").click(function() {
-				socket.emit('command', 'p');
-			});
-			$("#back").click(function() {
-				socket.emit('command', '\x1B\x5B\x44');
-			});
-			$("#skip").click(function() {
-				socket.emit('command', '\x1B\x5B\x43');
-			});
-			$("#slow").click(function() {
-				socket.emit('command', '1');
-			});
-			$("#fast").click(function() {
-				socket.emit('command', '2');
-			});
-			$("#abort").click(function() {
-				socket.emit('command', 'q');
+				// Control Buttons
+				$("#p").click(function() {
+					socket.emit('command', 'p');
+				});
+				$("#back").click(function() {
+					socket.emit('command', '\x1B\x5B\x44');
+				});
+				$("#skip").click(function() {
+					socket.emit('command', '\x1B\x5B\x43');
+				});
+				$("#slow").click(function() {
+					socket.emit('command', '1');
+				});
+				$("#fast").click(function() {
+					socket.emit('command', '2');
+				});
+				$("#abort").click(function() {
+					socket.emit('command', 'q');
+				});
 			});
 		</script>
 	<!-- End Document -->
