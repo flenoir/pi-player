@@ -18,6 +18,16 @@
 		<link rel="stylesheet" href="./stylesheets/skeleton.css">
 		<link rel="stylesheet" href="./stylesheets/layout.css">
 
+		<style type="text/css">
+			.playlist
+			{
+				height:260px;
+				overflow:auto;
+			}
+			.playlist li.selected
+			{ background-color:grey; }
+		</style>
+
 		<!--[if lt IE 9]>
 			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
 		<![endif]-->
@@ -34,8 +44,10 @@
 			<div class="three columns sidebar">
 				<h3 id="logo">Playlist</h3>
 				<input id="go" type="button" value="Play Selected Items" />
-				<select multiple="multiple" size="14" id="items">
-				</select>
+				<div class="playlist">
+					<ul id="items">
+					</ul>
+				</div>
 				<input id="clear" type="button" value="Clear Selected Items" />
 			</div>
 			<div class="thirteen columns">
@@ -68,13 +80,35 @@
 		<script src="./js/socket.io.js"></script>
 		<!-- Web Sockets -->
 		<script>
+			$(".playlist li").css('cursor', 'pointer');
+
+			$(".playlist li").click(function(event) {
+					console.log('You clicked ', $(event.target).text());
+					$(this).toggleClass('selected');
+			});
+
+				// Playlist buttons
+				$("#go").click(function() {
+					var playlist = [];
+					$('.playlist li.selected').each(function() {
+						playlist.push($(this).text());
+					});
+					socket.emit('play', playlist);
+					console.log("Playing: ", playlist);
+				});
+
+				$("#clear").click(function() {
+					$(".playlist li").removeClass('selected');
+					console.log('Clear button pushed');
+				});
+
 			$.get("http://bismuth.rocky.edu/pi-player/ip.txt").done(function(host){
 				var socket = io.connect(host);
 				socket.on('files', function (data) {
 					$("#status").html('Status: Connected');
 					$("#items").html('');
 					for (i=0; i < data.length; i++) {
-						$("#items").append('<option value="'+data[i]+'">' + data[i] + '</option>');
+						$("#items").append('<li> ' + data[i] + '</li>');
 					}
 				});
 
@@ -86,14 +120,6 @@
 				socket.on('disconnect', function () {
 					$("#status").html('Status: Not Connected');
 					$("#items").html('');
-				});
-
-				// Playlist buttons
-				$("#go").click(function() {
-					socket.emit('play', $("#items").val());
-				});
-				$("#clear").click(function() {
-					$("#items").val([]);
 				});
 
 				// Control Buttons
